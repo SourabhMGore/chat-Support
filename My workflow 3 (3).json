@@ -1,0 +1,228 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "mode": "webhook",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ccbcce23-32b5-46bf-ba2b-4735b727ac9d",
+      "name": "When chat message received",
+      "webhookId": "ad0c63f4-0c93-40dc-a54e-b2319eb4d0c0"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a professional Customer Support Assistant for [Bitlance], a company that provides [Ai customer support]. Your goal is to assist users efficiently, empathetically, and in a tone consistent with our brand voice—friendly, clear, and helpful.\n\nuse tools to your support\n1.Gmail to send mail of the query of customer\n2.Rag question-Use this tool for general FAQ questions"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "77b5d066-7696-4c49-85a5-3f93c0536458",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        60,
+        200
+      ],
+      "id": "db59ba3e-c78e-4d4f-a06a-e6c7cec15a13",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ceFH6yIfX5RtJb1q",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        200,
+        200
+      ],
+      "id": "cd7ed22a-4a2d-4cab-9eee-a48b59d69d10",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to query general business faq questions. // REPLACE WITH ENV VAR OR CREDENTIAL BEFORE DEPLOYING",
+        "method": "POST",
+        "url": "https://prod-1-data.ke.pinecone.io/assistant/chat/harry",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "={{$env.PINECONE_API_KEY}}\n"
+            },
+            {
+              "name": "X-Pinecone-API-Version",
+              "value": "2025-04"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{Rag questions}\"\n    }\n  ],\n  \"stream\": false,\n  \"model\": \"gpt-4o\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        220
+      ],
+      "id": "7ef13406-ec72-4cc8-a590-5ac8cdd711c3",
+      "name": "Rag questions"
+    },
+    {
+      "parameters": {
+        "sendTo": "sourabhgorez56@gmail.com",
+        "subject": "new support  ai  ",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        360,
+        220
+      ],
+      "id": "7f933429-9144-44ad-91a0-75416890c965",
+      "name": "Gmail",
+      "webhookId": "8b6553c8-a378-4323-b5d9-75e8569d92af",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XhvrTPxEpK9oin4G",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "NOTE: Token was removed for security. Add PERPLEXITY_API_KEY as env var before deploying.\n",
+        "url": "https://api.perplexity.ai/chat/completions ",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        220
+      ],
+      "id": "ba73ad10-9bb1-4a02-b477-88cbf5e2a82e",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rag questions": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "53bba8fc-a4f4-40d7-8976-38d482f7eb6a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0db37f5c0cfa8dc25a6fe2b87ad8fc46713145d3454c62c8f4490beaa8df68e5"
+  },
+  "id": "DIGenVdAMCa87VBV",
+  "tags": []
+}
